@@ -1,8 +1,11 @@
 
 package net.jaumebalmes.grincon17.recuperaciom09uf2;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.security.KeyStore;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toMap;
 
 
 public class Main {
@@ -16,7 +19,7 @@ public class Main {
 
         LicensePlate licensePlate = new LicensePlate(INITIAL_PLATE);
         TrafficOffice [] trafficOffice = new TrafficOffice[TRAFFIC_OFFICES];
-        HashMap<Integer, ArrayList<LicensePlate>> assignedPlates = new HashMap<>();
+        TreeMap<Integer, ArrayList<LicensePlate>> assignedPlates = new TreeMap<>();
 
         for(int i = 0; i < TRAFFIC_OFFICES; i++) {
             trafficOffice [i] = new TrafficOffice(i, licensePlate, assignedPlates);
@@ -34,20 +37,21 @@ public class Main {
             }
         }
 
-        int topAssigned = 0;
-        int office = 0;
-        for(int i = 0; i < TRAFFIC_OFFICES; i++) {
-            try {
-                trafficOffice[i].join();
-                ArrayList<LicensePlate> platesAssigned =  assignedPlates.get(i);
-                if(platesAssigned.size()>topAssigned) {
-                    topAssigned=platesAssigned.size();
-                    office = i;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        Map<Integer, Integer> topOfficesRanking = new TreeMap<>();
+        for(Map.Entry<Integer, ArrayList<LicensePlate>> entry : assignedPlates.entrySet()) {
+            ArrayList<LicensePlate> licensePlates = entry.getValue();
+            topOfficesRanking.put(entry.getKey(), licensePlates.size());
         }
-        System.out.println("Office " + office + " Assigned a total of " + topAssigned);
+        Map<Integer, Integer> topOffices = topOfficesRanking
+                .entrySet()
+                .stream()
+                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new ));
+        System.out.println("\n Top offices ranking:\n");
+        int ranking = 1;
+        for(Map.Entry<Integer, Integer> entry : topOffices.entrySet()) {
+            System.out.println(ranking + " Place --->>> office " + entry.getKey() + " assigned " + entry.getValue() + " license plates");
+            ranking++;
+        }
     }
 }
